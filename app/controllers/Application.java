@@ -20,7 +20,7 @@ import play.mvc.Result;
 import views.html.meta;
 
 public class Application extends Controller {
-    public static Result index() {
+    public static Result index() throws IOException, InvalidProtocolBufferException {
 		// Register facets
 		FacetRegistry facetRegistry = new FacetRegistry();
 		facetRegistry.addFacet(new Facet("Organization", FacetType.STRING));
@@ -44,22 +44,10 @@ public class Application extends Controller {
 		QueryCoder queryCoder = new QueryCoder(request().path(), coderMgr);
 		Query query = queryCoder.decode(request().queryString());
 
-		byte[] reply = null;
-		try {
-			// Query AFS search engine
-			reply = queryManager.send(query);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// Query AFS search engine
+		byte[] reply = queryManager.send(query);
 
-		replies result = null;
-		try {
-			result = replies.parseFrom(reply, ProtobufExtensionManager.getResgistry());
-		} catch (InvalidProtocolBufferException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		replies result = replies.parseFrom(reply, ProtobufExtensionManager.getResgistry());
 
 		RepliesHelper helper = new RepliesHelper(result, facetRegistry, queryCoder, query);
     	return ok(meta.render(helper));
